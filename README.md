@@ -210,4 +210,7 @@ to be as seamless as possible moving forward.
 
 ## License
 
-Free to use. As thanks to the open source community like @OrcaSlicer @OctoPrint and many more, that continue to make what we do possible. Prevolve Footwear.
+Free to use. As thanks to the open source community with tools like [@OrcaSlicer](https://github.com/OrcaSlicer)
+[@OctoPrint](https://github.com/OctoPrint) and many more that continue to make what we do possible our goal is to
+offer this free to use and hopefully one day soon, offer an avenue to donate where 100% of donations will go towards
+getting more cleats in more hands. Prevolve Footwear.
