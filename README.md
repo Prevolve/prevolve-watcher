@@ -35,6 +35,17 @@ lives in the system tray — there is no console window.
   operating system drops a file event.
 - **Dropbox conflicted copies are skipped** automatically.
 
+### Note:
+If you manually move files to an archive, a subfolder, or any different location still within the watched folder;
+the files will still be picked up by the watcher as new items/ events due to the new file location. To mitigate
+this preemptively and especially if you are doing this en-masse, create a list of these files and add them to the
+.txt ledger file, stop the watcher, move the files, then start the watcher again. On startup, at the start of every
+safety scan, and when the user clicks "reload history" at the bottom, the ledger is reloaded to memory. By
+stopping, adding new locations to the ledger, moving files, then starting the watcher again, the user utilizes one
+of these situations in which the ledger is reloaded to memory to prevent falsely uploading files. Other active methods
+like using the "reload history" button are also valid approaches but result in similar outcomes with potentially
+higher risk as a result of human error.
+
 ---
 
 ## Install
@@ -116,7 +127,7 @@ and the machine:
 New rush jobs land below any priority jobs already in the queue and are ordered among
 themselves by number, so a rush job never reshuffles work already scheduled.
 
-## IMPORTANT NOTE
+## IMPORTANT
 Rush jobs land in chunked groups (defined by time allotted in settings, 5min default),
 if you set a priority of 4 but only have 3 files, errors may occur. This has not been
 tested at length. We use priorities 1 and 2 sparingly for our parts.
@@ -211,6 +222,6 @@ to be as seamless as possible moving forward.
 ## License
 
 Free to use. As thanks to the open source community with tools like [@OrcaSlicer](https://github.com/OrcaSlicer)
-[@OctoPrint](https://github.com/OctoPrint) and many more that continue to make what we do possible our goal is to
-offer this free to use and hopefully one day soon, offer an avenue to donate where 100% of donations will go towards
-getting more cleats in more hands. Prevolve Footwear.
+[@OctoPrint](https://github.com/OctoPrint) and many more that continue to make what we do possible; our goal is to
+offer this free to use. Hopefully one day soon, we aspire to offer an avenue to donate where 100% of donations will
+go towards getting more cleats in more hands. [Prevolve Footwear](https://prevolvefootwear.com/).
