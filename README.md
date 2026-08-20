@@ -187,7 +187,7 @@ On Linux, replace `%LOCALAPPDATA%\Watch2Print` with `~/.config/watch2print`.
 
 ## Download
 
-[Download our most current release for Windows and Linux here.](https://github.com/Prevolve/prevolve-watcher/releases/latest
+[Download our most current release for Windows and Linux here.](https://github.com/Prevolve/prevolve-watcher/releases/latest)
 
 --- 
 
