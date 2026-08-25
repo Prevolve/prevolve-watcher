@@ -61,28 +61,66 @@ Download the latest `Watch2Print-Setup-x.y.z.exe` from
 - Optionally starts with Windows; this can be changed later from the interface.
 - Uninstall via native "Add/ Remove" tool
 
-### Linux
+### Linux (Debian / Ubuntu family)
 
-PowerShell 7 is the only dependency. There is no installer and no tray icon; it runs as a
-systemd user service.
+Ships as a `.deb` package with a guided install script. No tray icon; the interface works
+the same way in a browser, and it can run as a systemd user service.
+
+Download `watch2print_x.y.z_all.deb` and `install.sh` from
+[Releases](../../releases) into the same folder, then:
 
 ```bash
-# 1. PowerShell 7 (Ubuntu example)
-sudo apt install -y powershell
-
-# 2. Run once to create a settings file
-pwsh -NoProfile -File ./Watch2Print_Web.ps1 -NoBrowser
-
-# 3. Configure at http://localhost:8787, then install the service
-./install-linux.sh
+chmod +x install.sh
+./install.sh
 ```
 
-The installer checks the inotify watch limit against the size of your folder tree and
-tells you how to raise it if the tree is bigger. Over the limit, new files are missed
+The script explains that PowerShell 7 is required, asks permission before adding
+Microsoft's package repository to install it, and shows the exact package list each step
+will install before touching anything — nothing is installed silently. On a desktop the
+prompts are dialog boxes; over SSH they appear in the terminal.
+
+```bash
+watch2print                        # open the interface (configure and Save first)
+watch2print --install-service      # run in the background at login; asks about auto-start
+sudo loginctl enable-linger $USER  # keep the service running after logout
+
+systemctl --user status watch2print    # is it running?
+systemctl --user restart watch2print
+systemctl --user stop watch2print
+journalctl --user -u watch2print -f    # follow the service log
+
+watch2print --uninstall-service    # remove the background service
+sudo apt remove watch2print        # uninstall (settings in ~/.config/watch2print are kept)
+```
+
+The service installer checks the inotify watch limit against the size of your folder tree
+and tells you how to raise it if the tree is bigger. Over the limit, new files are missed
 with no error at all.
 
-macOS is untested. The engine has no Windows-only dependencies and should run under
-PowerShell 7, this is currently under development as well.
+### macOS
+
+Ships as `Watch2Print.app` inside `Watch2Print-macOS.zip`. The app is not code-signed —
+this software is free and Apple's signing program is not — so macOS asks permission once.
+
+1. Unzip and double-click `Watch2Print.app`. macOS blocks it as an app from an
+   unidentified developer.
+2. Allow it: **System Settings → Privacy & Security → Open Anyway** (older macOS:
+   right-click → Open). If macOS says the app is "damaged":
+   `xattr -dr com.apple.quarantine Watch2Print.app`
+3. On first run the app checks for PowerShell 7 and offers to install it with
+   [Homebrew](https://brew.sh) — or do it yourself:
+   `brew install --cask powershell` (or `brew install --cask powershell@preview` if the
+   first name is not found).
+4. Drag the app into **Applications** and open it again. It offers to install the
+   `watch2print` terminal command, then the browser opens — configure and Save.
+
+```bash
+watch2print --install-service      # launchd agent, starts at login; asks about auto-start
+watch2print --uninstall-service
+```
+
+Settings live in `~/Library/Application Support/Watch2Print`. The on-startup toggle in
+the interface manages the same launchd agent.
 
 ---
 
@@ -180,14 +218,16 @@ a pasted file. It does **not** protect against someone who already has the user 
 | `%LOCALAPPDATA%\Watch2Print\colormap.json` | Colour name → hex map |
 | `%LOCALAPPDATA%\Watch2Print\Watch2Print_Engine_MP.ps1` | Engine, unpacked from the exe. Do not edit. |
 | `%LOCALAPPDATA%\Watch2Print\watch2print.log` | Startup and server log |
+| `%LOCALAPPDATA%\Watch2Print\logs\` | Rolling debug log files (see Debug log files below) |
 
-On Linux, replace `%LOCALAPPDATA%\Watch2Print` with `~/.config/watch2print`.
+On Linux, replace `%LOCALAPPDATA%\Watch2Print` with `~/.config/watch2print`; on macOS,
+with `~/Library/Application Support/Watch2Print`.
 
 ---
 
 ## Download
 
-[Download our most current release for Windows and Linux here.](https://github.com/Prevolve/prevolve-watcher/releases/latest)
+[Download our most current release for Windows, Linux, and macOS here.](https://github.com/Prevolve/prevolve-watcher/releases/latest)
 
 --- 
 
@@ -214,15 +254,31 @@ to be as seamless as possible moving forward.
 
 ---
 
+## Debug log files
+
+Everything shown in the Activity and Debug panes is also written to a rolling debug file,
+so the record of a 2am failure survives the 5,000-line window, a browser refresh, and a
+restart — including when running as a background service. A file covers at most 30 days
+or 50 MB, then rotates: `debug_20260824-current.txt` becomes `debug_20260824-20260923.txt`
+and a new file begins.
+
+Settings → **Logging** controls it: on/off (on by default), how long finished files are
+kept (1/3/6/12 months or forever), and where they go — blank means a `logs` folder inside
+the settings folder, and an unusable custom folder falls back there with a note.
+Credentials are masked before anything is written.
+
+---
+
 ## Known limitations
 
 - **Unsigned.** SmartScreen warns once on first run.
 - **Printago and 3DPrinterOS are under development** and less tailored than SimplyPrint.
-- **The interface is localhost-only** by design. Remote monitoring would need
-  authentication first, and there is none.
+- **The interface is local-only by default.** It can be shared on your own network behind
+  a passphrase, with read-only or full remote access — but HTTP on a LAN is unencrypted,
+  so never expose or port-forward it to the internet.
 - **inotify limits on Linux.** A large tree can exceed the kernel watch limit, and going
   over it fails silently. `install-linux.sh` checks and warns.
-- **macOS is untested.**
+- **macOS support is new** — first hardware validation done, broader testing ongoing.
 - **Updating process limitations and streamlining.
 
 ## License
