@@ -227,30 +227,22 @@ with `~/Library/Application Support/Watch2Print`.
 
 ## Download
 
-[Download our most current release for Windows, Linux, and macOS here.](https://github.com/Prevolve/prevolve-watcher/releases/latest)
+- **Windows:** [Watch2Print-Setup.exe](../../releases/latest/download/Watch2Print-Setup.exe)
+- **Linux (Debian/Ubuntu):** [watch2print_all.deb](../../releases/latest/download/watch2print_all.deb) + [install.sh](../../releases/latest/download/install.sh)
+- **macOS:** [Watch2Print-macOS.zip](../../releases/latest/download/Watch2Print-macOS.zip)
+
+[All downloads, build kits, and source →](../../releases/latest)
 
 --- 
 
 ## Updating
 
-Settings → **Version** → **Check now**. If a newer build exists, an **Update** button
-appears and downloads the installer.
+**Settings** → **Version** → **Check now**. If a newer build exists, an **Update** button
+appears and clicking it prompts the user about downtime and continuing on.
 
-The update source is a small JSON file at a web address or a file path — a farm with a
-shared drive can point every machine at one file with no web host involved. Set
-`updateUrl` in the config, or `$script:UpdateUrl` at build time.
-
-```json
-{
-  "version": "1.1.0",
-  "url": "https://example.com/Watch2Print-Setup-1.1.0.exe",
-  "notes": "What changed."
-}
-```
-
-Updates are downloaded, not installed silently. Windows locks a running executable, so the
-swap is deliberately a manual step. This system is also under development, we aim for this
-to be as seamless as possible moving forward.
+All updates shut down the service first, download the update, install the new version,
+and upon validating functionality, delete the old version. Rollbacks from within the UI
+are not currently supported but can be accessed from the repository any time.
 
 ---
 
