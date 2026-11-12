@@ -1176,6 +1176,9 @@ function Invoke-SimplyPrintJob {
                     # Each used slot is scored against the filename materials (+2 color
                     # hex, +2 family substring, e.g. "TPU" in "RoamrTPU"); best scorer
                     # at/above $u1MinMatchScore is tagged, below is left untagged + warned.
+                    # A score tie goes to the filename material in the slot's own position
+                    # when the filename names one triplet per slot (see $u1Positional),
+                    # otherwise to the first unclaimed material in filename order.
 
                     # Build the filename-declared materials, each with searchable family text.
                     $fileMats = @()
@@ -1189,8 +1192,25 @@ function Invoke-SimplyPrintJob {
                             color      = $m.color
                             familyText = $famText
                             claimed    = $false
+                            index      = $fm
                         }
                     }
+
+                    # Positional tie-break. Filename triplets are written in extruder
+                    # order, so when the filename names exactly one triplet per analysis
+                    # slot (used AND unused) the triplet at index k belongs to slot k.
+                    # Position only settles a score tie: it never outranks a better
+                    # colour/family match and never lifts a match over $u1MinMatchScore.
+                    # It is off when the counts differ (the file names only the filaments
+                    # it uses, or a triplet had no filament type and was dropped), which
+                    # keeps the old first-in-filename-order rule.
+                    # Why: 11-11-2026, a 4-triplet file with tool 0 idle. Black PEBA on
+                    # nozzle 3 slices as generic "TPU", which is not in the PEBA family
+                    # text, so it tied on colour alone with the idle Black PLA triplet
+                    # and the PLA, being first in the filename, was tagged instead.
+                    $u1Positional = ($null -ne $materialData -and
+                                     $fileMats.Count -eq @($materialData).Count -and
+                                     $fileMats.Count -eq @($meta.materials).Count)
 
                     # Build the list of USED extruder slots from the analysis (ground truth).
                     $usedSlots = @()
@@ -1226,6 +1246,7 @@ function Invoke-SimplyPrintJob {
                             $bestScore = -1
                             $bestHexHit = $false
                             $bestFamHit = $false
+                            $bestByPos  = $false
                             foreach ($m in $fileMats) {
                                 if ($m.claimed) { continue }
                                 $hexHit = ($slotHexN -ne "" -and (Normalize-Hex $m.hex) -eq $slotHexN)
@@ -1233,11 +1254,13 @@ function Invoke-SimplyPrintJob {
                                 $score  = 0
                                 if ($hexHit) { $score += 2 }
                                 if ($famHit) { $score += 2 }
-                                if ($score -gt $bestScore) {
+                                $posTie = ($u1Positional -and $score -eq $bestScore -and $m.index -eq $slot.ext)
+                                if ($score -gt $bestScore -or $posTie) {
                                     $bestScore  = $score
                                     $best       = $m
                                     $bestHexHit = $hexHit
                                     $bestFamHit = $famHit
+                                    $bestByPos  = $posTie
                                 }
                             }
 
@@ -1265,6 +1288,9 @@ function Invoke-SimplyPrintJob {
                                     Write-Host "U1: ext $($slot.ext) -> '$($best.color)' type $($best.typeId) [best guess: $sig; analysis family '$($slot.family)', hex '$($slot.hex)']." -ForegroundColor Yellow
                                 } else {
                                     Write-Host "U1: ext $($slot.ext) -> '$($best.color)' type $($best.typeId) [WEAK guess: no color/family signal; analysis family '$($slot.family)', hex '$($slot.hex)']." -ForegroundColor Yellow
+                                }
+                                if ($bestByPos) {
+                                    Write-Host "U1: ext $($slot.ext) score tie settled by filename position (material $($best.index + 1) of $($fileMats.Count))." -ForegroundColor DarkYellow
                                 }
                             } else {
                                 # Nothing left to assign, or best match below threshold ->
